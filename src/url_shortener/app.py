@@ -1,4 +1,3 @@
-from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -17,17 +16,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         # Task 2: build the async DB engine + session maker, store on app.state
         yield
         # Task 2: dispose of the engine
-    
+
     app = FastAPI(title="URL Shortener", lifespan=lifespan)
 
     app.state.settings = settings
-    app.dependency_overrides[get_settings] = lambda: settings  # Make the settings dependency return THIS app's settings
+    app.dependency_overrides[get_settings] = lambda: settings
 
     register_routers(app)
     # register_error_handlers(app)          # Task 7: the error envelope
     # register_rate_limiter(app, settings)  # Task 7
 
     return app
+
 
 def register_routers(app: FastAPI) -> None:
     """Register routers with the FastAPI app.

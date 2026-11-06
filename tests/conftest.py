@@ -2,6 +2,7 @@ from collections.abc import AsyncIterator
 
 import pytest
 from httpx import ASGITransport, AsyncClient
+from pydantic import SecretStr
 
 from url_shortener.app import create_app
 from url_shortener.core.settings import Settings
@@ -13,8 +14,8 @@ def test_settings() -> Settings:
     return Settings(
         _env_file=None,
         env="test",
-        database_url="postgresql+asyncpg://test:test@localhost:5432/test",
-        cleanup_secret="test-secret",
+        database_url=SecretStr("postgresql+asyncpg://test:test@localhost:5432/test"),
+        cleanup_secret=SecretStr("test-secret"),
     )
 
 
