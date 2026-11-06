@@ -1,0 +1,31 @@
+[project]
+name = "url-shortener"
+version = "0.1.0"
+description = "URL shortener built with FastAPI and hosted on Cloudflare Containers."
+readme = "README.md"
+authors = [
+    { name = "Edward Simpson-Fitzgibbon", email = "edward.psf@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.128.8",
+    "pydantic-settings>=2.11.0",
+    "uvicorn>=0.39.0",
+]
+
+[project.scripts]
+url-shortener = "url_shortener:main"
+
+[build-system]
+requires = ["uv_build>=0.13.7,<0.14.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "mypy>=1.19.1",
+    "pre-commit>=4.3.0",
+    "pytest>=8.4.2",
+    "pytest-asyncio>=1.2.0",
+    "ruff>=0.17.4",
+]
