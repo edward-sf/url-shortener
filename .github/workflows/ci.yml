@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref}}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: shortener
+          POSTGRES_PASSWORD: shortener
+          POSTGRES_DB: shortener
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U shortener -d shortener_test"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 15
+
+    env:
+      ENV: test
+      DATABASE_URL: postgresql+asyncpg://shortener:shortener@localhost:5432/shortener_test
+      CLEANUP_SECRET: ci-only-not-a-secret
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10
+        with:
+          version: "0.13.7"
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Lint
+        run: make lint
+
+      - name: Type-check
+        run: make typecheck
+
+      - name: Tests
+        run: make test
