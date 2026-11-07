@@ -16,13 +16,11 @@ URL shortener built with FastAPI and hosted in Cloudflare Containers with Planet
 - [ ] P3: Links! Code generation, aliases, expiry, URL validation, create/list/get/delete, `make seed`.
 - [ ] P4: Redirect, click recording, 404/410
 - [ ] P5: Stats queries, `/stats` endpoint.
-- [ ] P6: Error envelope, rate limiting.
-- [ ] P7: Stats queries and the `GET /api/links/{code}/stats` endpoint.
-- [ ] P8: Rate limiting.
-- [ ] P9: Web frontend (templates, HTMX, cookie flow, CSRF check, SVG chart).
-- [ ] P10: Cleanup endpoint + Cron Trigger.
-- [ ] P11: Production Dockerfile, CI image build, Cloudflare Containers + PlanetScale deployment, CD pipeline, smoke test
-- [ ] P12: Go-live README edit, live URL, `curl` demo, publish to portfolio
+- [ ] P6: Rate limiting.
+- [ ] P7: Web frontend (templates, HTMX, cookie flow, CSRF check, SVG chart).
+- [ ] P8: Cleanup endpoint + Cron Trigger.
+- [ ] P9: Production Dockerfile, CI image build, Cloudflare Containers + PlanetScale deployment, CD pipeline, smoke test
+- [ ] P10: Go-live README edit, live URL, `curl` demo, publish to portfolio
 
 ## Architecture
 
