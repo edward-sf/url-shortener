@@ -14,12 +14,12 @@ test:  ## Run the test suite
 	uv run pytest
 
 lint:  ## Check linting and formatting (no changes)
-	uv run ruff check src tests
-	uv run ruff format --check src tests
+	uv run ruff check src tests migrations
+	uv run ruff format --check src tests migrations
 
 format:  ## Auto-fix linting and formatting issues
-	uv run ruff check --fix src tests
-	uv run ruff format src tests
+	uv run ruff check --fix src tests migrations
+	uv run ruff format src tests migrations
 
 typecheck:  ## Run static type checking
 	uv run mypy
