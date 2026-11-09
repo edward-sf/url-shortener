@@ -11,7 +11,7 @@ URL shortener built with FastAPI and hosted in Cloudflare Containers with Planet
 ## v1.0.0 Dev Roadmap
 
 - [x] :white_check_mark: P0: Project skeleton, settings, Docker Compose, CI (lint/type/test on an empty app).
-- [ ] P1: Models, first Alembic migration, migration round-trip test, DB session and lifespan, `/health` running `SELECT 1`, transactional test fixture, `make migrate`.
+- [x] :white_check_mark: P1: Models, first Alembic migration, migration round-trip test, DB session and lifespan, `/health` running `SELECT 1`, transactional test fixture, `make migrate`.
 - [ ] P2: Error envelope, then API keys: generation, hashing, `require_api_key` (header and cookie), `POST /api/keys`. Coverage gate in CI.
 - [ ] P3: Links! Code generation, aliases, expiry, URL validation, create/list/get/delete, `make seed`.
 - [ ] P4: Redirect, click recording, 404/410
@@ -71,7 +71,46 @@ flowchart TD
 
 ## Data model
 
-**Completed in Task 2**
+```mermaid
+erDiagram
+    api_keys ||--o{ links : owns
+    links ||--o{ clicks : records
+
+    api_keys {
+        bigint id PK
+        varchar prefix UK
+        char key_hash
+        timestamptz created_at
+        timestamptz last_used_at "nullable"
+        timestamptz revoked_at "nullable"
+    }
+    links {
+        bigint id PK
+        varchar code UK
+        boolean is_custom
+        text target_url
+        bigint api_key_id FK
+        timestamptz created_at
+        timestamptz expires_at "nullable, null means never"
+    }
+    clicks {
+        bigint id PK
+        bigint link_id FK
+        timestamptz clicked_at
+        varchar referrer_domain "nullable"
+        varchar device_category
+    }
+```
+
+- **Cascading deletes live in Postgres.** Deleting a key removes its links, and deleting a link removes its clicks, even for writes that bypass the ORM.
+- **Indexes match the queries the app runs.**
+    - `links(code)` is unique, which rejects duplicate codes and makes redirect lookups fast.
+    - `links(api_key_id, created_at DESC, id DESC)` serves "My links". Postgres reads rows already in newest-first order and stops at the page limit, without sorting. `id` breaks ties between identical timestamps, which keeps cursor pagination stable.
+    - `links(expires_at) WHERE expires_at IS NOT NULL` serves the cleanup job. It's a partial index, so links that never expire take up no space in it.
+    - `clicks(link_id, clicked_at)` serves per-link stats, which filter by link and then by a date range.
+- **API Keys are stored only as SHA-256 hashes.** A database leak doesn't expose usable keys, and the raw key is shown only once, at creation. A short public prefix finds the row, then `hmac.compare_digest` compares the hashes in constant time. SHA-256 is safe here because generated keys have about 190 bits of entropy, which makes guessing infeasible. Slow hashes like argon2 protect low-entropy, human-chosen passwords, and would only add latency to every authenticated request.
+- **IP Addresses are deliberately not stored.** Each click records only the time, the referrer's domain and a coarse device category. Keeping personal data out of the table avoids the retention and consent obligations that come with it.
+- **Click counts are derived from the event table, not stored in a counter.** `COUNT(*)` over the `(link_id, clicked_at)` index is fast at this scale, and there's no counter to keep in sync with the events. If traffic outgrows that, pre-aggregated rollups are the planned path.
 
 ## Design decisions
 
@@ -106,6 +145,8 @@ cp .env.example .env
 uv sync
 uv run pre-commit install
 make dev
+make migrate
+make test-db
 ```
 
 Then open http://localhost:8000/health or http://localhost:8000/docs.
@@ -115,6 +156,8 @@ Then open http://localhost:8000/health or http://localhost:8000/docs.
 | Command | What it does |
 | ------- | ------------ |
 | `make dev` | Start Postgres + the app with live reload |
+| `make migrate` | Apply database migrations to the dev database |
+| `make test-db` | Create the test database (once per Docker volume) |
 | `make down` | Stop containers (keeps the database volume) |
 | `make check` | Lint, type-check and test (same as CI) |
 | `make format` | Auto-fix lint issues and format code |
