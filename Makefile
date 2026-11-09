@@ -1,5 +1,5 @@
 .DEFAULT_GOAL = help
-.PHONY: help dev down test test-db lint format typecheck check
+.PHONY: help dev down migrate test test-db lint format typecheck check
 
 help:  ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "  %-10s %s\n", $$1, $$2}'
@@ -9,6 +9,9 @@ dev:  ## Start Postgres + app with live reload
 
 down:  ## Stop containers (keeps the database volume)
 	docker compose down
+
+migrate:  ## Apply database migrations to the dev database
+	uv run alembic upgrade head
 
 test:  ## Run the test suite
 	uv run pytest
