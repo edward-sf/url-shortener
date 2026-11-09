@@ -1,8 +1,10 @@
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
 from url_shortener.api.health import router as health_router
+from url_shortener.core.database import build_engine, build_session_factory
 from url_shortener.core.settings import Settings, get_settings
 
 
@@ -12,10 +14,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         settings = get_settings()
 
     @asynccontextmanager
-    async def lifespan(app: FastAPI):
-        # Task 2: build the async DB engine + session maker, store on app.state
+    async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
+        engine = build_engine(settings)
+        app.state.session_factory = build_session_factory(engine)
         yield
-        # Task 2: dispose of the engine
+        await engine.dispose()
 
     app = FastAPI(title="URL Shortener", lifespan=lifespan)
 
