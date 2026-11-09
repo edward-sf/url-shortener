@@ -1,5 +1,5 @@
 .DEFAULT_GOAL = help
-.PHONY: help dev down test lint format typecheck check
+.PHONY: help dev down test test-db lint format typecheck check
 
 help:  ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "  %-10s %s\n", $$1, $$2}'
@@ -12,6 +12,9 @@ down:  ## Stop containers (keeps the database volume)
 
 test:  ## Run the test suite
 	uv run pytest
+
+test-db:  ## Create the test database (run once per Docker volume)
+	docker compose exec db createdb -U shortener shortener_test
 
 lint:  ## Check linting and formatting (no changes)
 	uv run ruff check src tests migrations
