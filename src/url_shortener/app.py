@@ -5,6 +5,7 @@ from fastapi import FastAPI
 
 from url_shortener.api.health import router as health_router
 from url_shortener.core.database import build_engine, build_session_factory
+from url_shortener.core.errors import register_error_handlers
 from url_shortener.core.settings import Settings, get_settings
 
 
@@ -26,7 +27,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.dependency_overrides[get_settings] = lambda: settings
 
     register_routers(app)
-    # register_error_handlers(app)          # Task 7: the error envelope
+    register_error_handlers(app)
     # register_rate_limiter(app, settings)  # Task 7
 
     return app
